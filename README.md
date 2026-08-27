@@ -60,7 +60,19 @@ dotnet test DotnetAiEvaluationDemo.sln --configuration Release --no-build
 
 ## Opting into an LLM-graded evaluator
 
-The sample keeps the provider out of the default dependency graph. To add a model-graded path, install the current stable `Microsoft.Extensions.AI.Evaluation.Quality` package and a provider adapter that implements `IChatClient`, then replace the `F1Evaluator` registration with a configured `RelevanceEvaluator` and pass a `ChatConfiguration` to the evaluation service. Keep the provider endpoint and credentials in server-side configuration such as user secrets, environment variables, or managed identity. Do not accept them in `EvaluationRequest`.
+The sample keeps the provider out of the default API dependency graph. The `LiveEvaluation` project is the explicit provider-backed path: it adapts an OpenAI-compatible endpoint to `IChatClient`, invokes `RelevanceEvaluator`, and applies local-model-safe reasoning and output-token settings to the judge request.
+
+For an OpenAI-compatible server, set the endpoint and model returned by `/v1/models`:
+
+```bash
+EVAL_MODEL_ENDPOINT='http://your-server:8080/v1' \
+EVAL_MODEL_ID='/path/to/model.gguf' \
+dotnet run --project src/DotnetAiEvaluationDemo.LiveEvaluation/DotnetAiEvaluationDemo.LiveEvaluation.csproj --configuration Release
+```
+
+The API key defaults to the harmless placeholder `local`, which is suitable for servers that do not require authentication. Set `EVAL_MODEL_API_KEY` when the endpoint requires a key. Keep endpoints and credentials in server-side configuration such as user secrets or environment variables; do not accept them in `EvaluationRequest`.
+
+The runner uses a generated response when the model returns usable text. If a local model returns only reasoning or an empty answer, it reports that fact and evaluates a deterministic fallback so the judge path can still be diagnosed independently.
 
 This separation is intentional: deterministic metrics are appropriate for every pull request, while model-graded evaluations should be explicitly enabled, cached, and thresholded against a versioned dataset because they consume model capacity and can vary between runs.
 
@@ -70,6 +82,7 @@ This separation is intentional: deterministic metrics are appropriate for every 
 src/
   DotnetAiEvaluationDemo.Core/                 Evaluation contract and service
   DotnetAiEvaluationDemo.Api/                  Minimal API and DI registration
+  DotnetAiEvaluationDemo.LiveEvaluation/      Opt-in OpenAI-compatible live judge
 tests/
   DotnetAiEvaluationDemo.Core.Tests/           Unit tests
   DotnetAiEvaluationDemo.Api.IntegrationTests/ WebApplicationFactory tests
