@@ -60,7 +60,7 @@ var relevance = evaluation.Get<NumericMetric>(RelevanceEvaluator.RelevanceMetric
 var relevanceValue = relevance.Value;
 
 Console.WriteLine($"Endpoint: {endpoint}");
-Console.WriteLine($"Model: {model}");
+Console.WriteLine($"Model: {Path.GetFileName(model)}");
 Console.WriteLine($"Generated response length: {response.Text.Length} characters");
 Console.WriteLine($"Contains <think> markup: {response.Text.Contains("<think>", StringComparison.OrdinalIgnoreCase)}");
 Console.WriteLine($"Evaluation response source: {(response.Text.Length > 0 ? "generated" : "deterministic fallback")}");

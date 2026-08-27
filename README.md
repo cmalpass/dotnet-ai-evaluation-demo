@@ -74,6 +74,22 @@ The API key defaults to the harmless placeholder `local`, which is suitable for 
 
 The runner uses a generated response when the model returns usable text. If a local model returns only reasoning or an empty answer, it reports that fact and evaluates a deterministic fallback so the judge path can still be diagnosed independently.
 
+Example output captured from the local Qwen deployment used while developing this sample (the model path is shortened for portability):
+
+```text
+Endpoint: http://192.168.1.125:8080/v1
+Model: Qwen3.6-35B-A3B-UD-IQ3_S.gguf
+Generated response length: 698 characters
+Contains <think> markup: False
+Evaluation response source: generated
+Relevance: 4/5
+Rating: Good
+Passed: True
+Reason: The response directly and accurately answers the query in a single concise paragraph, explaining the importance of representative datasets regarding generalization, bias mitigation, and safety, fully satisfying the prompt's requirements.
+```
+
+This is a captured example, not a promised constant. A later run against the same local model returned `5/5` (`Exceptional`), which is why production gates should be calibrated across a representative dataset rather than anchored to one smoke-test score.
+
 This separation is intentional: deterministic metrics are appropriate for every pull request, while model-graded evaluations should be explicitly enabled, cached, and thresholded against a versioned dataset because they consume model capacity and can vary between runs.
 
 ## Repository layout
