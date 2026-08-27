@@ -1,0 +1,27 @@
+{
+  "dataset": "northwind-support",
+  "datasetVersion": "2026-08-27.1",
+  "application": {
+    "mode": "simulated",
+    "retrievalTopK": 3,
+    "toolSideEffects": "record-only"
+  },
+  "evaluators": {
+    "deterministic": [
+      "AnswerQualityEvaluator",
+      "RetrievalLabelEvaluator",
+      "ToolTrajectoryEvaluator",
+      "SafetyPolicyEvaluator"
+    ],
+    "liveQuality": [
+      "RelevanceEvaluator",
+      "GroundednessEvaluator"
+    ],
+    "safety": "optional-hosted-evaluator"
+  },
+  "execution": {
+    "samplesPerCase": 3,
+    "cache": "artifacts/evaluation",
+    "report": "artifacts/evaluation/report.json"
+  }
+}

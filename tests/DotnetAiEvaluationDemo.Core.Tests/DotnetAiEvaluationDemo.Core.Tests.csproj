@@ -16,4 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DotnetAiEvaluationDemo.Core\DotnetAiEvaluationDemo.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\data\evaluation-cases.jsonl" Link="data\evaluation-cases.jsonl" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\data\evaluation-profile.json" Link="data\evaluation-profile.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

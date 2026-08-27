@@ -1,6 +1,6 @@
 # AI response evaluation in .NET 10
 
-This self-contained sample demonstrates an evaluation boundary around an AI response. The API accepts a prompt, generated response, reference answer, and optional retrieved context. The core service invokes a custom deterministic `IEvaluator` built on the stable `Microsoft.Extensions.AI.Evaluation` abstractions and maps its result to a small, stable HTTP contract.
+This self-contained sample demonstrates an evaluation boundary around an AI response and a small production-shaped evaluation lab. The API accepts a prompt, generated response, reference answer, and optional retrieved context. The core service invokes a custom deterministic `IEvaluator` built on the stable `Microsoft.Extensions.AI.Evaluation` abstractions and maps its result to a small, stable HTTP contract.
 
 The default path is deliberately safe and deterministic:
 
@@ -58,6 +58,34 @@ dotnet build DotnetAiEvaluationDemo.sln --configuration Release
 dotnet test DotnetAiEvaluationDemo.sln --configuration Release --no-build
 ```
 
+## Run the simulated production evaluation lab
+
+The `data/evaluation-cases.jsonl` fixture contains ten synthetic Northwind Cloud support cases. It includes exact and paraphrased answers, incomplete answers, retrieval-label regressions, tool-call ordering and argument checks, allowed content, refusal behavior, and an intentional credential-leak regression. No real customer data or credentials are used. The companion `data/evaluation-profile.json` records the dataset version, simulated retrieval/tool environment, evaluator layers, sample count, and artifact locations.
+
+Run the deterministic dataset exercises entirely offline:
+
+```bash
+dotnet run --project src/DotnetAiEvaluationDemo.OfflineEvaluation/DotnetAiEvaluationDemo.OfflineEvaluation.csproj --configuration Release
+```
+
+The current fixture intentionally reports six of ten cases passing so the output demonstrates how failures surface:
+
+```text
+Profile: northwind-support v2026-08-27.1 (simulated)
+Cases: 6/10 passed (60.0%)
+RetrievalRecall                 2        1     50.0%     0.75
+SafetyPolicy                    3        2     66.7%     0.67
+ToolTrajectory                  2        1     50.0%     0.50
+```
+
+Use the explicit regression switch when the dataset represents the approved baseline. This command is expected to exit with status `1` for the intentionally failing fixture:
+
+```bash
+dotnet run --project src/DotnetAiEvaluationDemo.OfflineEvaluation/DotnetAiEvaluationDemo.OfflineEvaluation.csproj --configuration Release -- --fail-on-regression
+```
+
+The runner emits both human-readable case results and JSON suitable for piping into a report or CI artifact. Extend the dataset by adding one JSON object per line and keep case IDs stable so result comparisons remain meaningful.
+
 ## Opting into an LLM-graded evaluator
 
 The sample keeps the provider out of the default API dependency graph. The `LiveEvaluation` project is the explicit provider-backed path: it adapts an OpenAI-compatible endpoint to `IChatClient`, invokes `RelevanceEvaluator`, and applies local-model-safe reasoning and output-token settings to the judge request.
@@ -98,7 +126,11 @@ This separation is intentional: deterministic metrics are appropriate for every 
 src/
   DotnetAiEvaluationDemo.Core/                 Evaluation contract and service
   DotnetAiEvaluationDemo.Api/                  Minimal API and DI registration
+  DotnetAiEvaluationDemo.OfflineEvaluation/    Dataset loader and deterministic lab runner
   DotnetAiEvaluationDemo.LiveEvaluation/      Opt-in OpenAI-compatible live judge
+data/
+  evaluation-cases.jsonl                        Synthetic production-shaped evaluation set
+  evaluation-profile.json                       Versioned simulated environment and run policy
 tests/
   DotnetAiEvaluationDemo.Core.Tests/           Unit tests
   DotnetAiEvaluationDemo.Api.IntegrationTests/ WebApplicationFactory tests
