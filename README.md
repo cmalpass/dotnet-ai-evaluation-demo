@@ -43,6 +43,8 @@ curl -i http://localhost:5000/api/evaluations \
 
 An exact reference answer produces an F1 score of `1` and a passing report.
 
+This endpoint accepts the reference answer because it is a teaching sample. In a real evaluation service, the golden answer, retrieval labels, safety contract, and expected tool trace must come from a trusted, version-controlled dataset—not from the request being evaluated.
+
 ## Test
 
 ```bash
@@ -94,7 +96,7 @@ For an OpenAI-compatible server, set the endpoint and model returned by `/v1/mod
 
 ```bash
 EVAL_MODEL_ENDPOINT='http://your-server:8080/v1' \
-EVAL_MODEL_ID='/path/to/model.gguf' \
+EVAL_MODEL_ID='your-model-id' \
 dotnet run --project src/DotnetAiEvaluationDemo.LiveEvaluation/DotnetAiEvaluationDemo.LiveEvaluation.csproj --configuration Release
 ```
 
@@ -142,7 +144,7 @@ tests/
 
 ## Blog post
 
-The companion post will be published at [AI Agent Evaluation in .NET — Measuring What Matters](https://chrismalpass.com/posts/ai-agent-evaluation-dotnet/).
+The companion post is [Evaluating AI Applications and Agents in .NET](https://chrismalpass.com/posts/ai-agent-evaluation-dotnet/).
 
 ## License
 
