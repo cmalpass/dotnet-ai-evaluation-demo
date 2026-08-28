@@ -21,7 +21,7 @@
   },
   "execution": {
     "samplesPerCase": 3,
-    "cache": "artifacts/evaluation",
-    "report": "artifacts/evaluation/report.json"
+    "cache": "not enabled by the deterministic runner; use Reporting for response caching",
+    "report": "stdout JSON; use aieval for stored evaluation reports"
   }
 }

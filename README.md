@@ -60,7 +60,7 @@ dotnet test DotnetAiEvaluationDemo.sln --configuration Release --no-build
 
 ## Run the simulated production evaluation lab
 
-The `data/evaluation-cases.jsonl` fixture contains ten synthetic Northwind Cloud support cases. It includes exact and paraphrased answers, incomplete answers, retrieval-label regressions, tool-call ordering and argument checks, allowed content, refusal behavior, and an intentional credential-leak regression. No real customer data or credentials are used. The companion `data/evaluation-profile.json` records the dataset version, simulated retrieval/tool environment, evaluator layers, sample count, and artifact locations.
+The `data/evaluation-cases.jsonl` fixture contains ten synthetic Northwind Cloud support cases. It includes exact and paraphrased answers, incomplete answers, retrieval-label regressions, tool-call ordering and argument checks, allowed content, refusal behavior, and an intentional credential-leak regression. No real customer data or credentials are used. The companion `data/evaluation-profile.json` records the dataset version, simulated retrieval/tool environment, evaluator layers, sample count, and the artifact conventions a production runner would use.
 
 Run the deterministic dataset exercises entirely offline:
 
@@ -84,11 +84,11 @@ Use the explicit regression switch when the dataset represents the approved base
 dotnet run --project src/DotnetAiEvaluationDemo.OfflineEvaluation/DotnetAiEvaluationDemo.OfflineEvaluation.csproj --configuration Release -- --fail-on-regression
 ```
 
-The runner emits both human-readable case results and JSON suitable for piping into a report or CI artifact. Extend the dataset by adding one JSON object per line and keep case IDs stable so result comparisons remain meaningful.
+The runner emits both human-readable case results and JSON suitable for piping into a report or CI artifact. It intentionally does not claim to implement the hosted reporting/cache package; use the `Microsoft.Extensions.AI.Evaluation.Reporting` package and `aieval` tool for that workflow. Extend the dataset by adding one JSON object per line and keep case IDs stable so result comparisons remain meaningful.
 
 ## Opting into an LLM-graded evaluator
 
-The sample keeps the provider out of the default API dependency graph. The `LiveEvaluation` project is the explicit provider-backed path: it adapts an OpenAI-compatible endpoint to `IChatClient`, invokes `RelevanceEvaluator`, and applies local-model-safe reasoning and output-token settings to the judge request.
+The sample keeps the provider out of the default API dependency graph. The `LiveEvaluation` project is the explicit provider-backed path: it adapts an OpenAI-compatible endpoint to `IChatClient`, invokes `RelevanceEvaluator` and `GroundednessEvaluator` concurrently through `CompositeEvaluator`, supplies a `GroundednessEvaluatorContext`, and applies local-model-safe reasoning and output-token settings to the judge request.
 
 For an OpenAI-compatible server, set the endpoint and model returned by `/v1/models`:
 
@@ -107,14 +107,18 @@ Example output captured from the local Qwen deployment used while developing thi
 ```text
 Endpoint: http://192.168.1.125:8080/v1
 Model: Qwen3.6-35B-A3B-UD-IQ3_S.gguf
-Generated response length: 698 characters
+Generated response length: 635 characters
 Contains <think> markup: False
 Evaluation response source: generated
 Relevance: 4/5
-Rating: Good
-Passed: True
-Reason: The response directly and accurately answers the query in a single concise paragraph, explaining the importance of representative datasets regarding generalization, bias mitigation, and safety, fully satisfying the prompt's requirements.
+Relevance rating: Good
+Relevance passed: True
+Groundedness: 3/5
+Groundedness rating: Average
+Groundedness passed: False
 ```
+
+In this run the judge considered the response relevant but not grounded because it introduced fairness and bias claims that were not present in the supplied grounding context. That is a useful failure: relevance and groundedness are separate dimensions, and the local judge's rubric/model combination needs calibration before it can be used as a release gate.
 
 This is a captured example, not a promised constant. A later run against the same local model returned `5/5` (`Exceptional`), which is why production gates should be calibrated across a representative dataset rather than anchored to one smoke-test score.
 
