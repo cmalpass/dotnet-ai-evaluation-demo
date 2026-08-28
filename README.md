@@ -144,7 +144,7 @@ tests/
 
 ## Blog post
 
-The companion post is [Evaluating AI Applications and Agents in .NET](https://chrismalpass.com/posts/ai-agent-evaluation-dotnet/).
+The companion post is [Evaluating AI Applications and Agents in .NET](https://chrismalpass.net/posts/ai-agent-evaluation-dotnet/).
 
 ## License
 
